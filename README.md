@@ -41,7 +41,8 @@ This is an advanced QR Code Generator that helps users easily create and customi
 - FileSaver.js (for downloading files)
 
 ## Screenshots
-*(Add screenshots here if needed)*
+![image](https://github.com/user-attachments/assets/5ef5d900-1188-4e52-9b22-7669858ad3b3)
+
 
 ## License
 This project is open-source and free to use for any purpose.
