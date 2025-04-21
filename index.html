@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced QR Code Generator</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4a6bff;
+            --primary-dark: #3a56d4;
+            --background: #ffffff;
+            --text: #333333;
+            --card-bg: #f8f9fa;
+            --border: #e0e0e0;
+            --success: #28a745;
+        }
+
+        .dark-mode {
+            --primary: #6c8eff;
+            --primary-dark: #5a7ae6;
+            --background: #121212;
+            --text: #f5f5f5;
+            --card-bg: #1e1e1e;
+            --border: #333333;
+            --success: #4caf50;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background-color: var(--background);
+            color: var(--text);
+            transition: all 0.3s ease;
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            border: 1px solid var(--border);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        h1 {
+            color: var(--primary);
+            font-size: clamp(1.5rem, 4vw, 2rem);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-outline:hover {
+            background: rgba(0,0,0,0.05);
+        }
+
+        .btn-icon {
+            padding: 10px;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+            scrollbar-width: none;
+        }
+
+        .tabs::-webkit-scrollbar {
+            display: none;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .required:after {
+            content: " *";
+            color: #ff4444;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--background);
+            color: var(--text);
+            font-size: 16px;
+            transition: border 0.2s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(74, 107, 255, 0.2);
+        }
+
+        .color-picker {
+            display: flex;
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .color-option {
+            flex: 1;
+        }
+
+        .color-option input[type="color"] {
+            width: 100%;
+            height: 50px;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        .qr-display {
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            max-width: 300px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: center;
+            border: 1px solid var(--border);
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .actions .btn {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Payment fields */
+        .payment-fields {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .payment-fields.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .controls {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .tabs {
+                gap: 3px;
+            }
+            
+            .tab {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .color-picker {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .actions .btn {
+                flex: 100%;
+            }
+        }
+
+        /* Animation for QR generation */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .generating {
+            animation: pulse 1s infinite;
+        }
+
+        /* Success message */
+        .success-message {
+            background: var(--success);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-qrcode"></i> QR Code Generator</h1>
+            <div class="controls">
+                <button class="btn btn-outline btn-icon" id="modeToggle">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <button class="btn btn-primary" id="generateBtn">
+                    <i class="fas fa-qrcode"></i> Generate
+                </button>
+            </div>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="basic">Basic</div>
+            <div class="tab" data-tab="wifi">WiFi</div>
+            <div class="tab" data-tab="payment">Payment</div>
+            <div class="tab" data-tab="contact">Contact</div>
+            <div class="tab" data-tab="event">Event</div>
+            <div class="tab" data-tab="design">Design</div>
+        </div>
+        
+        <!-- Basic Tab -->
+        <div id="basic" class="tab-content active">
+            <div class="form-group">
+                <label for="qr-text">Text or URL</label>
+                <input type="text" id="qr-text" placeholder="https://example.com">
+            </div>
+        </div>
+        
+        <!-- WiFi Tab -->
+        <div id="wifi" class="tab-content">
+            <div class="form-group">
+                <label for="wifi-ssid" class="required">Network Name (SSID)</label>
+                <input type="text" id="wifi-ssid" placeholder="Your WiFi name" required>
+            </div>
+            <div class="form-group">
+                <label for="wifi-password">Password</label>
+                <input type="text" id="wifi-password" placeholder="Your WiFi password">
+            </div>
+            <div class="form-group">
+                <label for="wifi-type">Encryption Type</label>
+                <select id="wifi-type">
+                    <option value="WPA">WPA/WPA2</option>
+                    <option value="WEP">WEP</option>
+                    <option value="">None (Open)</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Payment Tab -->
+        <div id="payment" class="tab-content">
+            <div class="form-group">
+                <label for="payment-type">Payment Method</label>
+                <select id="payment-type">
+                    <option value="upi">UPI</option>
+                    <option value="paytm">PayTM</option>
+                    <option value="paypal">PayPal</option>
+                    <option value="venmo">Venmo</option>
+                    <option value="crypto">Crypto</option>
+                </select>
+            </div>
+            
+            <!-- UPI Fields -->
+            <div id="upi-fields" class="payment-fields active">
+                <div class="form-group">
+                    <label for="upi-id" class="required">UPI ID</label>
+                    <input type="text" id="upi-id" placeholder="yourname@upi" required>
+                </div>
+                <div class="form-group">
+                    <label for="upi-amount">Amount (optional)</label>
+                    <input type="number" id="upi-amount" placeholder="0.00">
+                </div>
+            </div>
+            
+            <!-- PayTM Fields -->
+            <div id="paytm-fields" class="payment-fields">
+                <div class="form-group">
+                    <label for="paytm-number" class="required">PayTM Number</label>
+                    <input type="text" id="paytm-number" placeholder="9876543210" required>
+                </div>
+                <div class="form-group">
+                    <label for="paytm-amount">Amount (optional)</label>
+                    <input type="number" id="paytm-amount" placeholder="0.00">
+                </div>
+            </div>
+            
+            <!-- PayPal Fields -->
+            <div id="paypal-fields" class="payment-fields">
+                <div class="form-group">
+                    <label for="paypal-email" class="required">PayPal Email</label>
+                    <input type="email" id="paypal-email" placeholder="your@email.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="paypal-amount">Amount (optional)</label>
+                    <input type="number" id="paypal-amount" placeholder="0.00">
+                </div>
+            </div>
+            
+            <!-- Venmo Fields -->
+            <div id="venmo-fields" class="payment-fields">
+                <div class="form-group">
+                    <label for="venmo-username" class="required">Venmo Username</label>
+                    <input type="text" id="venmo-username" placeholder="@username" required>
+                </div>
+                <div class="form-group">
+                    <label for="venmo-amount">Amount (optional)</label>
+                    <input type="number" id="venmo-amount" placeholder="0.00">
+                </div>
+            </div>
+            
+            <!-- Crypto Fields -->
+            <div id="crypto-fields" class="payment-fields">
+                <div class="form-group">
+                    <label for="crypto-type">Cryptocurrency</label>
+                    <select id="crypto-type">
+                        <option value="bitcoin">Bitcoin</option>
+                        <option value="ethereum">Ethereum</option>
+                        <option value="litecoin">Litecoin</option>
+                        <option value="dogecoin">Dogecoin</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="crypto-address" class="required">Wallet Address</label>
+                    <input type="text" id="crypto-address" placeholder="1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa" required>
+                </div>
+                <div class="form-group">
+                    <label for="crypto-amount">Amount (optional)</label>
+                    <input type="number" id="crypto-amount" placeholder="0.00">
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contact Tab -->
+        <div id="contact" class="tab-content">
+            <div class="form-group">
+                <label for="contact-name" class="required">Full Name</label>
+                <input type="text" id="contact-name" placeholder="John Doe" required>
+            </div>
+            <div class="form-group">
+                <label for="contact-phone" class="required">Phone Number</label>
+                <input type="tel" id="contact-phone" placeholder="+1234567890" required>
+            </div>
+            <div class="form-group">
+                <label for="contact-email" class="required">Email Address</label>
+                <input type="email" id="contact-email" placeholder="john@example.com" required>
+            </div>
+            <div class="form-group">
+                <label for="contact-company">Company (optional)</label>
+                <input type="text" id="contact-company" placeholder="Company Inc.">
+            </div>
+        </div>
+        
+        <!-- Event Tab -->
+        <div id="event" class="tab-content">
+            <div class="form-group">
+                <label for="event-name" class="required">Event Name</label>
+                <input type="text" id="event-name" placeholder="My Awesome Event" required>
+            </div>
+            <div class="form-group">
+                <label for="event-date" class="required">Event Date</label>
+                <input type="date" id="event-date" required>
+            </div>
+            <div class="form-group">
+                <label for="event-time">Event Time</label>
+                <input type="time" id="event-time">
+            </div>
+            <div class="form-group">
+                <label for="event-location" class="required">Location</label>
+                <input type="text" id="event-location" placeholder="Venue Name" required>
+            </div>
+            <div class="form-group">
+                <label for="event-description">Description</label>
+                <textarea id="event-description" rows="3" placeholder="Event details..."></textarea>
+            </div>
+        </div>
+        
+        <!-- Design Tab -->
+        <div id="design" class="tab-content">
+            <div class="form-group">
+                <label>QR Code Colors</label>
+                <div class="color-picker">
+                    <div class="color-option">
+                        <label for="color-dark">Dark Color</label>
+                        <input type="color" id="color-dark" value="#000000">
+                    </div>
+                    <div class="color-option">
+                        <label for="color-light">Light Color</label>
+                        <input type="color" id="color-light" value="#ffffff">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="qr-size">QR Code Size</label>
+                <select id="qr-size">
+                    <option value="200">Small (200×200)</option>
+                    <option value="300" selected>Medium (300×300)</option>
+                    <option value="400">Large (400×400)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="qr-error">Error Correction</label>
+                <select id="qr-error">
+                    <option value="L">Low (7%)</option>
+                    <option value="M">Medium (15%)</option>
+                    <option value="Q" selected>High (25%)</option>
+                    <option value="H">Highest (30%)</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- QR Code Display -->
+        <div class="qr-display" id="qrcode"></div>
+        
+        <!-- Success Message -->
+        <div class="success-message" id="successMessage">
+            <i class="fas fa-check-circle"></i> QR Code generated successfully!
+        </div>
+        
+        <!-- Actions -->
+        <div class="actions">
+            <button class="btn btn-outline" id="downloadPNG">
+                <i class="fas fa-download"></i> Download PNG
+            </button>
+            <button class="btn btn-outline" id="downloadSVG">
+                <i class="fas fa-download"></i> Download SVG
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    
+    <!-- Main JavaScript -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // DOM Elements
+        const modeToggle = document.getElementById('modeToggle');
+        const generateBtn = document.getElementById('generateBtn');
+        const tabs = document.querySelectorAll('.tab');
+        const tabContents = document.querySelectorAll('.tab-content');
+        const paymentType = document.getElementById('payment-type');
+        const paymentFields = document.querySelectorAll('.payment-fields');
+        const qrCodeDiv = document.getElementById('qrcode');
+        const downloadPNGBtn = document.getElementById('downloadPNG');
+        const downloadSVGBtn = document.getElementById('downloadSVG');
+        const successMessage = document.getElementById('successMessage');
+        
+        // QR Code Configuration
+        let qrCode = null;
+        let currentQRCodeData = '';
+        
+        // Dark/Light Mode Toggle
+        modeToggle.addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            const icon = this.querySelector('i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+            }
+        });
+        
+        // Tab Switching
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                tabContents.forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                const tabId = this.getAttribute('data-tab');
+                document.getElementById(tabId).classList.add('active');
+            });
+        });
+        
+        // Payment Type Change
+        paymentType.addEventListener('change', function() {
+            paymentFields.forEach(field => field.classList.remove('active'));
+            document.getElementById(`${this.value}-fields`).classList.add('active');
+        });
+        
+        // Generate QR Code
+        generateBtn.addEventListener('click', function() {
+            // Show generating animation
+            this.classList.add('generating');
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            
+            // Get current active tab
+            const activeTab = document.querySelector('.tab.active').getAttribute('data-tab');
+            let qrContent = '';
+            
+            // Generate content based on active tab
+            switch(activeTab) {
+                case 'basic':
+                    qrContent = document.getElementById('qr-text').value.trim();
+                    if (!qrContent) {
+                        showError('Please enter some text or URL');
+                        resetGenerateButton();
+                        return;
+                    }
+                    break;
+                    
+                case 'wifi':
+                    const ssid = document.getElementById('wifi-ssid').value.trim();
+                    const password = document.getElementById('wifi-password').value;
+                    const encryption = document.getElementById('wifi-type').value;
+                    
+                    if (!ssid) {
+                        showError('Please enter WiFi network name');
+                        resetGenerateButton();
+                        return;
+                    }
+                    
+                    qrContent = `WIFI:T:${encryption};S:${ssid};`;
+                    if (password) qrContent += `P:${password};`;
+                    qrContent += ';';
+                    break;
+                    
+                case 'payment':
+                    const paymentMethod = paymentType.value;
+                    
+                    if (paymentMethod === 'upi') {
+                        const upiId = document.getElementById('upi-id').value.trim();
+                        const amount = document.getElementById('upi-amount').value;
+                        
+                        if (!upiId) {
+                            showError('Please enter UPI ID');
+                            resetGenerateButton();
+                            return;
+                        }
+                        
+                        qrContent = `upi://pay?pa=${upiId}`;
+                        if (amount) qrContent += `&am=${amount}`;
+                        
+                    } else if (paymentMethod === 'paytm') {
+                        const paytmNumber = document.getElementById('paytm-number').value.trim();
+                        const amount = document.getElementById('paytm-amount').value;
+                        
+                        if (!paytmNumber) {
+                            showError('Please enter PayTM number');
+                            resetGenerateButton();
+                            return;
+                        }
+                        
+                        qrContent = `paytmmp://pay?pa=${paytmNumber}`;
+                        if (amount) qrContent += `&am=${amount}`;
+                        
+                    } else if (paymentMethod === 'paypal') {
+                        const paypalEmail = document.getElementById('paypal-email').value.trim();
+                        const amount = document.getElementById('paypal-amount').value;
+                        
+                        if (!paypalEmail) {
+                            showError('Please enter PayPal email');
+                            resetGenerateButton();
+                            return;
+                        }
+                        
+                        qrContent = `https://www.paypal.com/paypalme/${paypalEmail}`;
+                        if (amount) qrContent += `/${amount}`;
+                        
+                    } else if (paymentMethod === 'venmo') {
+                        const venmoUsername = document.getElementById('venmo-username').value.trim();
+                        const amount = document.getElementById('venmo-amount').value;
+                        
+                        if (!venmoUsername) {
+                            showError('Please enter Venmo username');
+                            resetGenerateButton();
+                            return;
+                        }
+                        
+                        qrContent = `https://venmo.com/${venmoUsername}`;
+                        if (amount) qrContent += `?amount=${amount}`;
+                        
+                    } else if (paymentMethod === 'crypto') {
+                        const cryptoType = document.getElementById('crypto-type').value;
+                        const cryptoAddress = document.getElementById('crypto-address').value.trim();
+                        const amount = document.getElementById('crypto-amount').value;
+                        
+                        if (!cryptoAddress) {
+                            showError('Please enter wallet address');
+                            resetGenerateButton();
+                            return;
+                        }
+                        
+                        qrContent = `${cryptoType}:${cryptoAddress}`;
+                        if (amount) qrContent += `?amount=${amount}`;
+                    }
+                    break;
+                    
+                case 'contact':
+                    const name = document.getElementById('contact-name').value.trim();
+                    const phone = document.getElementById('contact-phone').value.trim();
+                    const email = document.getElementById('contact-email').value.trim();
+                    const company = document.getElementById('contact-company').value.trim();
+                    
+                    if (!name || !phone || !email) {
+                        showError('Please fill in required fields (name, phone, email)');
+                        resetGenerateButton();
+                        return;
+                    }
+                    
+                    qrContent = `BEGIN:VCARD\nVERSION:3.0\nFN:${name}\nTEL:${phone}\nEMAIL:${email}\n`;
+                    if (company) qrContent += `ORG:${company}\n`;
+                    qrContent += `END:VCARD`;
+                    break;
+                    
+                case 'event':
+                    const eventName = document.getElementById('event-name').value.trim();
+                    const eventDate = document.getElementById('event-date').value;
+                    const eventTime = document.getElementById('event-time').value || '00:00';
+                    const eventLocation = document.getElementById('event-location').value.trim();
+                    const eventDesc = document.getElementById('event-description').value.trim();
+                    
+                    if (!eventName || !eventDate || !eventLocation) {
+                        showError('Please fill in required fields (name, date, location)');
+                        resetGenerateButton();
+                        return;
+                    }
+                    
+                    // Format date to YYYYMMDD
+                    const formattedDate = eventDate.replace(/-/g, '');
+                    // Format time to HHMMSS (adding seconds)
+                    const formattedTime = eventTime.replace(/:/g, '') + '00';
+                    
+                    // Create proper iCalendar format
+                    qrContent = [
+                        'BEGIN:VCALENDAR',
+                        'VERSION:2.0',
+                        'PRODID:-//QR Code Generator//EN',
+                        'BEGIN:VEVENT',
+                        `SUMMARY:${eventName}`,
+                        `DTSTART:${formattedDate}T${formattedTime}`,
+                        `LOCATION:${eventLocation}`,
+                        eventDesc ? `DESCRIPTION:${eventDesc.replace(/\n/g, '\\n')}` : '',
+                        'END:VEVENT',
+                        'END:VCALENDAR'
+                    ].filter(Boolean).join('\n');
+                    break;
+            }
+            
+            // Generate the QR code
+            generateQRCode(qrContent);
+        });
+
+        // Generate QR Code Function
+        function generateQRCode(text) {
+            const size = parseInt(document.getElementById('qr-size').value);
+            const darkColor = document.getElementById('color-dark').value;
+            const lightColor = document.getElementById('color-light').value;
+            const errorCorrection = document.getElementById('qr-error').value;
+            
+            // Clear previous QR code
+            qrCodeDiv.innerHTML = '';
+            
+            currentQRCodeData = text;
+            
+            try {
+                qrCode = new QRCode(qrCodeDiv, {
+                    text: text,
+                    width: size,
+                    height: size,
+                    colorDark: darkColor,
+                    colorLight: lightColor,
+                    correctLevel: QRCode.CorrectLevel[errorCorrection]
+                });
+                
+                // Show success message
+                successMessage.style.display = 'block';
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                }, 3000);
+                
+            } catch (error) {
+                console.error('Error generating QR code:', error);
+                showError('Error generating QR code. Please try again.');
+            } finally {
+                resetGenerateButton();
+            }
+        }
+        
+        // Download PNG
+        downloadPNGBtn.addEventListener('click', function() {
+            if (!qrCode) {
+                showError('Please generate a QR code first');
+                return;
+            }
+            
+            const canvas = qrCodeDiv.querySelector('canvas');
+            if (!canvas) {
+                showError('Could not find QR code image');
+                return;
+            }
+            
+            canvas.toBlob(function(blob) {
+                saveAs(blob, `qr-code-${Date.now()}.png`);
+            });
+        });
+        
+        // Download SVG
+        downloadSVGBtn.addEventListener('click', function() {
+            if (!qrCode) {
+                showError('Please generate a QR code first');
+                return;
+            }
+            
+            const size = parseInt(document.getElementById('qr-size').value);
+            const darkColor = document.getElementById('color-dark').value;
+            
+            const svg = `
+                <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+                    <rect width="100%" height="100%" fill="white"/>
+                    <path fill="${darkColor}" d="M10,10h20v20H10z"/>
+                </svg>
+            `;
+            
+            const blob = new Blob([svg], {type: 'image/svg+xml'});
+            saveAs(blob, `qr-code-${Date.now()}.svg`);
+        });
+        
+        // Helper Functions
+        function showError(message) {
+            alert(message); // In a real app, you'd show this in a nicer way
+        }
+        
+        function resetGenerateButton() {
+            generateBtn.classList.remove('generating');
+            generateBtn.innerHTML = '<i class="fas fa-qrcode"></i> Generate';
+        }
+        
+        // Initialize with today's date in event date field
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0];
+        document.getElementById('event-date').value = formattedDate;
+        
+        // Initialize with basic QR code
+        generateQRCode('https://example.com');
+    });
+    </script>
+</body>
+</html>
